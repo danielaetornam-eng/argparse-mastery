@@ -1,0 +1,85 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "argparse-mastery"
+version = "1.0.0"
+description = "A teaching codebase for the stdlib argparse module: 37 annotated lessons, a reusable toolkit, and full documentation."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "argparse-mastery" }]
+keywords = ["argparse", "cli", "command-line", "teaching", "documentation"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+# Zero runtime dependencies on purpose. Everything here is built on top of the
+# standard library's argparse, which is the entire point of the project.
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.6"]
+
+[project.scripts]
+# A meta-CLI for reading the material from a terminal:
+#   argparse-mastery            -> lesson index
+#   argparse-mastery list       -> lesson index
+#   argparse-mastery show 12    -> print lesson 12's source
+#   argparse-mastery run 12     -> run lesson 12 with demo argv
+#   argparse-mastery api        -> print the toolkit API map
+argparse-mastery = "argparse_mastery.__main__:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests", "case_studies"]
+addopts = "-q --strict-markers"
+filterwarnings = ["error::DeprecationWarning:argparse_mastery.*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "examples", "tests", "case_studies"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "RUF"]
+ignore = [
+    "E501",    # long lines are fine in teaching material with aligned examples
+    "RUF012",  # mutable class attrs need ClassVar; noisy for Action subclasses
+    "SIM108",  # we prefer explicit if/else where it is pedagogically clearer
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Examples and the case study are meant to be *read*, so a few things that a
+# linter would tidy are load-bearing pedagogy and stay.
+"examples/*" = [
+    "E402",    # examples intentionally mutate sys.path before importing the toolkit
+    "F841",    # `dest = parser.add_argument(...)` shows the return value on purpose
+    "B007",    # demo loops carry a label column they do not always print
+    "SIM102",  # nested ifs are sometimes clearer than a compound condition
+    "SIM105",  # `except SystemExit: pass` is the anti-pattern being demonstrated
+]
+"case_studies/*" = [
+    "E402",
+    "SIM105",
+]
+"src/argparse_mastery/__init__.py" = [
+    "RUF022",  # `__all__` is grouped by topic with comments; alphabetical is worse
+]
+"tests/*" = [
+    "SIM117",  # deliberately-nested `with` blocks read better as separate steps
+    "E741",    # `l` for a lesson number is clearer than `lesson` in a comprehension
+]
